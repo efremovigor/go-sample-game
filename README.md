@@ -1,6 +1,9 @@
 # Пример игры
 Автор - Anatoliy Ostapenko
+
 Backend на Go - Igor Efremov
+
+fork from https://github.com/frontend-park-mail-ru/sample-game
 
 ## How to run
 
