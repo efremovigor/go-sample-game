@@ -98,11 +98,13 @@ func webSocketHandler(w http.ResponseWriter, r *http.Request) {
 		for {
 			select {
 			case <-receiver.closeConnect:
+				if game, ok := Games[session.ID]; ok {
+					game.stopGame()
+				}
 				_ = conn.Close()
 				break
 			}
 		}
-
 	}()
 }
 

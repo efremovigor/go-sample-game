@@ -39,9 +39,11 @@ const patternEndGame = "Игра окончена. Вы %s (%s(%d)/%s(%d))"
 
 var PlayersWait []*PlayerConnection
 var Connections = make(map[string]*PlayerConnection)
+var Games = make(map[string]*Game)
 
 type PlayerConnection struct {
 	Connection *ConnectionReceiver
+	SessionId  string
 	Name       string
 	Command    chan string
 	InGame     bool
@@ -61,9 +63,10 @@ func (p PlayerConnection) sendState(me PlayerGame, opponent PlayerGame, bullets 
 }
 
 type Game struct {
-	Player1 *PlayerConnection
-	Player2 *PlayerConnection
-	state   GameState
+	Player1      *PlayerConnection
+	Player2      *PlayerConnection
+	state        GameState
+	closeConnect chan int
 }
 
 func (game Game) sendStateGame() {
@@ -218,7 +221,7 @@ func (game Game) StartGame() {
 	}(&game)
 
 	for {
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 
 		if len(game.state.Bullets) > 0 {
 			var bullets []GameBullet
@@ -264,6 +267,17 @@ func (game Game) StartGame() {
 	}
 }
 
+func (game Game) stopGame() {
+	response := LoginJsonRequest{
+		Type:    SignalFinishGame,
+		Payload: Payload{Message: "Игра окончена. Ваш противник покинул игру"},
+	}
+
+	game.Player1.Connection.pushData(response)
+	game.Player2.Connection.pushData(response)
+
+}
+
 func PlayerSelection() {
 	var response = StartGameResponse{Type: SignalStartTheGame}
 	var responseJson []byte
@@ -275,7 +289,7 @@ func PlayerSelection() {
 		player2 := PlayersWait[len(PlayersWait)-1]
 		PlayersWait = PlayersWait[:len(PlayersWait)-1]
 
-		game := Game{Player1: player1, Player2: player2}
+		game := Game{Player1: player1, Player2: player2, closeConnect: make(chan int)}
 
 		response.Payload.Me = player1.Name
 		response.Payload.Opponent = player2.Name
@@ -288,6 +302,8 @@ func PlayerSelection() {
 		responseJson, _ = json.Marshal(response)
 		game.Player2.InGame = true
 		game.Player2.Connection.WriteChannel <- responseJson
+		Games[game.Player1.SessionId] = &game
+		Games[game.Player2.SessionId] = &game
 		go game.StartGame()
 	}
 }

@@ -28,7 +28,7 @@ func handleRequest(request lib.UserRequest) {
 func getPlayConnection(request lib.UserRequest) *lib.PlayerConnection {
 	var playerConnection, ok = lib.Connections[request.SessionId]
 	if !ok {
-		playerConnection = &lib.PlayerConnection{Name: request.Request.Payload.Username, Connection: request.Receiver, Command: make(chan string)}
+		playerConnection = &lib.PlayerConnection{Name: request.Request.Payload.Username, Connection: request.Receiver, Command: make(chan string), SessionId: request.SessionId}
 		lib.Connections[request.SessionId] = playerConnection
 		lib.PlayersWait = append(lib.PlayersWait, playerConnection)
 	}
