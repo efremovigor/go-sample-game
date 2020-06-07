@@ -8,6 +8,6 @@ fork from https://github.com/frontend-park-mail-ru/sample-game
 ## How to run
 
 1. `npm i`
-4. ./main
-5 [`http://localhost:3000/`](http://localhost:3000/)
+2. ./main
+3. [`http://localhost:3000/`](http://localhost:3000/)
 
